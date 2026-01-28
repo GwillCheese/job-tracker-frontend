@@ -65,7 +65,7 @@ export const api = {
 
   updateJob: async (token, jobId, jobData) => {
     const res = await fetch(`${API_URL}/jobs/${jobId}`, {
-      method: "PUT",
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
