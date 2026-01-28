@@ -1,21 +1,4 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://job-tracker-api-production-dfd7.up.railway.app";
-
-const handleResponse = async (res) => {
-  const contentType = res.headers.get("content-type") || "";
-  const hasJson = contentType.includes("application/json");
-  const data = hasJson ? await res.json() : null;
-
-  if (!res.ok) {
-    const message = data?.message || "Request failed";
-    const error = new Error(message);
-    error.status = res.status;
-    throw error;
-  }
-
-  return data;
-};
+const API_URL = "/api";
 
 export const api = {
   register: async (email, password) => {
@@ -24,8 +7,11 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-
-    return handleResponse(res);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Registration failed");
+    }
+    return res.json();
   },
 
   login: async (email, password) => {
@@ -34,20 +20,20 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-
-    return handleResponse(res);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Login failed");
+    }
+    return res.json();
   },
 
   getJobs: async (token, filters = {}) => {
     const params = new URLSearchParams(filters);
-    const query = params.toString();
-    const url = query ? `${API_URL}/jobs?${query}` : `${API_URL}/jobs`;
-
-    const res = await fetch(url, {
+    const res = await fetch(`${API_URL}/jobs?${params}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
-    return handleResponse(res);
+    if (!res.ok) throw new Error("Failed to fetch jobs");
+    return res.json();
   },
 
   createJob: async (token, jobData) => {
@@ -59,8 +45,11 @@ export const api = {
       },
       body: JSON.stringify(jobData),
     });
-
-    return handleResponse(res);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to create job");
+    }
+    return res.json();
   },
 
   updateJob: async (token, jobId, jobData) => {
@@ -72,8 +61,8 @@ export const api = {
       },
       body: JSON.stringify(jobData),
     });
-
-    return handleResponse(res);
+    if (!res.ok) throw new Error("Failed to update job");
+    return res.json();
   },
 
   deleteJob: async (token, jobId) => {
@@ -81,7 +70,7 @@ export const api = {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-
-    return handleResponse(res);
+    if (!res.ok) throw new Error("Failed to delete job");
+    return res.json();
   },
 };
